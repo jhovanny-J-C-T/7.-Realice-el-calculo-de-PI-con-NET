@@ -1,25 +1,37 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34221.43
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ejercicio7", "Ejercicio7\Ejercicio7.csproj", "{8C308584-B8F9-48D6-BD6E-9E70C4360D00}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8C308584-B8F9-48D6-BD6E-9E70C4360D00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8C308584-B8F9-48D6-BD6E-9E70C4360D00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8C308584-B8F9-48D6-BD6E-9E70C4360D00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8C308584-B8F9-48D6-BD6E-9E70C4360D00}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {073F6434-EC3F-4B8F-81C3-4321D79A28C7}
-	EndGlobalSection
-EndGlobal
+using System;
+using System.Threading.Tasks;
+
+class Program
+{
+    static void Main()
+    {
+        const int totalPuntos = 1000000; // Número total de puntos a generar
+        int puntosDentroCirculo = 0;
+        object lockObj = new object(); // Objeto de bloqueo para evitar condiciones de carrera
+
+        Parallel.For(0, totalPuntos, i =>
+        {
+            Random random = new Random(); // Cada hilo necesita su propia instancia de Random
+            double x = random.NextDouble(); // Coordenada x aleatoria entre 0 y 1
+            double y = random.NextDouble(); // Coordenada y aleatoria entre 0 y 1
+
+            // Calcula la distancia desde el punto al centro (0.5, 0.5)
+            double distanciaAlCentro = Math.Sqrt(Math.Pow(x - 0.5, 2) + Math.Pow(y - 0.5, 2));
+
+            // Si la distancia es menor o igual a 0.5, el punto está dentro del círculo
+            if (distanciaAlCentro <= 0.5)
+            {
+                lock (lockObj) // Bloqueo para evitar condiciones de carrera
+                {
+                    puntosDentroCirculo++;
+                }
+            }
+        });
+
+        // Estima el valor de pi utilizando la relación entre puntos dentro y fuera del círculo
+        double estimacionPi = 4.0 * puntosDentroCirculo / totalPuntos;
+
+        Console.WriteLine($"Estimación de PI usando {totalPuntos} puntos y programación paralela: {estimacionPi}");
+    }
+}
+
